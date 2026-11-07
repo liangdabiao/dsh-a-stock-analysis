@@ -69,3 +69,57 @@ test('LICENSE 为 MIT', () => {
   assert.ok(existsSync(join(ROOT, 'LICENSE')))
   assert.match(readFileSync(join(ROOT, 'LICENSE'), 'utf8'), /MIT/)
 })
+
+// ── 升级新增：crew + plan ───────────────────────────────────
+process.env.DSH_HOME = new URL('../.tmp/test-home/', import.meta.url).pathname.replace(/^\/([A-Za-z]):/, '$1:')
+
+const { loadCrew } = await import('../lib/crew.js')
+const data2 = await import('../lib/data.js')
+const host = await import('../src/host.js')
+
+test('crew: agents.yaml/tasks.yaml 解析出 4 角色 4 任务', () => {
+  const crew = loadCrew([join(ROOT, 'skills')])
+  assert.equal(crew.agents.length, 4)
+  assert.equal(crew.tasks.length, 4)
+  const fa = crew.agents.find((a) => a.key === 'financial_analyst')
+  assert.ok(fa.role.includes('财务'), '财务角色 goal 应解析')
+  assert.ok(crew.tasks.find((t) => t.key === 'investment_recommendation').expectedOutput.length > 10)
+})
+
+test('data: 研究清单 init/冲突/更新/清空', () => {
+  data2.clearPlan()
+  const plan = data2.initPlan('600519', '价值', undefined, false)
+  assert.equal(plan.items.length, 4)
+  const conflict = data2.initPlan('AAPL', '', undefined, false)
+  assert.equal(conflict.conflict, true)
+  const item = data2.updateStage(2, { status: 'done', note: '财务稳健' })
+  assert.equal(item.status, 'done')
+  data2.clearPlan()
+  assert.equal(data2.getPlan().items.length, 0)
+})
+
+test('host: 2 个工具 schema + crew/plan 全链路', async () => {
+  for (const tool of [host.astockCrewTool, host.astockPlanTool]) {
+    assert.equal(tool.parameters.additionalProperties, false)
+    assert.ok(tool.description.length > 30)
+  }
+  await assert.rejects(() => host.astockPlanTool.execute({ action: 'list', bogus: 1 }), /未知参数/)
+  host.apply(
+    { effect: (fn) => { try { fn() } catch {} }, tools: { register: () => {} }, skills: { registerProvider: () => {} }, systemPrompt: { section: () => {} }, webServer: { register: () => {} } },
+    { injectRules: false })
+  const crew = await host.astockCrewTool.execute({ action: 'all' })
+  assert.equal(crew.ok, true)
+  assert.ok(crew.data.includes('financial_analyst'))
+  const byKey = await host.astockCrewTool.execute({ action: 'agents', key: 'market_sentiment_analyst' })
+  assert.ok(byKey.data.includes('情绪'))
+  const miss = await host.astockCrewTool.execute({ action: 'agents', key: 'no-such' })
+  assert.equal(miss.ok, false)
+  const init = await host.astockPlanTool.execute({ action: 'init', target: '贵州茅台' })
+  assert.equal(init.ok, true)
+  const st = await host.astockPlanTool.execute({ action: 'status', index: 1, status: 'done', note: '大盘企稳' })
+  assert.ok(st.summary.includes('done'))
+  const list = await host.astockPlanTool.execute({ action: 'list' })
+  assert.ok(list.summary.includes('1/4'))
+  const noConfirm = await host.astockPlanTool.execute({ action: 'clear' })
+  assert.equal(noConfirm.ok, false)
+})

@@ -55,6 +55,44 @@ function GuideTab() {
       h('div', { style: styles.muted }, '本研究框架输出分析，不构成投资建议。所有投资存在风险，投资决策前请自行尽职调查。')))
 }
 
+
+// ---------- 研究进度 ----------
+const STATUS_STYLE = {
+  todo: ['#8a8a92', '○ 待做'],
+  doing: ['#b58a00', '◐ 进行中'],
+  done: ['#1a7f37', '✓ 完成'],
+}
+
+function PlanTab() {
+  const [plan, setPlan] = useState(null)
+  const [error, setError] = useState('')
+  useEffect(() => {
+    fetchJson('/api/plan').then((d) => setPlan(d.plan)).catch((e) => setError(e.message))
+  }, [])
+  if (error) return h('div', { style: styles.error }, error)
+  if (plan === null) return h('div', { style: styles.muted }, '加载中…')
+  if (!plan.items.length) {
+    return h('div', { style: styles.muted },
+      '还没有研究清单。在对话里说「深度分析贵州茅台」，模型会 init 4 阶段研究流程并逐阶段推进。')
+  }
+  const done = plan.items.filter((it) => it.status === 'done').length
+  const pct = Math.round((done / plan.items.length) * 100)
+  return h('div', null,
+    h('div', { style: styles.card },
+      h('div', { style: styles.sectionTitle }, '📈 ' + (plan.target || '未命名') + ' 研究进度'),
+      plan.style ? h('div', { style: styles.muted }, '风格：' + plan.style) : null,
+      h('div', { style: styles.mutedSmall }, done + '/' + plan.items.length + ' 完成（' + pct + '%）'),
+      h('div', { style: styles.barWrap }, h('div', { style: { ...styles.bar, width: pct + '%' } }))),
+    h('div', { style: styles.card },
+      plan.items.map((it) => {
+        const [color, label] = STATUS_STYLE[it.status] || STATUS_STYLE.todo
+        return h('div', { key: it.index, style: styles.item },
+          h('span', { style: { color, fontSize: 12, fontWeight: 700, minWidth: 66 } }, label),
+          h('span', { style: styles.itemTitle }, it.index + '. ' + it.task),
+          it.note ? h('div', { style: styles.mutedSmall }, it.note) : null)
+      })))
+}
+
 function SkillsTab() {
   const [skills, setSkills] = useState(null)
   const [error, setError] = useState('')
@@ -70,15 +108,21 @@ function SkillsTab() {
 }
 
 function Panel() {
-  const [tab, setTab] = useState('guide')
+  const [tab, setTab] = useState('plan')
   return h('div', { style: styles.wrap },
     h('div', { style: styles.row },
+      h('button', { style: tab === 'plan' ? styles.tabActive : styles.tab, onClick: () => setTab('plan') }, '📊 研究进度'),
       h('button', { style: tab === 'guide' ? styles.tabActive : styles.tab, onClick: () => setTab('guide') }, '📖 四大视角'),
       h('button', { style: tab === 'skills' ? styles.tabActive : styles.tab, onClick: () => setTab('skills') }, '📋 技能目录')),
-    tab === 'guide' ? h(GuideTab) : h(SkillsTab))
+    tab === 'plan' ? h(PlanTab) : tab === 'guide' ? h(GuideTab) : h(SkillsTab))
 }
 
 const styles = {
+  mutedSmall: { color: '#a0a0a8', fontSize: 12, lineHeight: 1.7 },
+  barWrap: { background: '#eee', borderRadius: 999, height: 8, marginTop: 8, overflow: 'hidden' },
+  bar: { background: '#b03a2e', height: '100%', borderRadius: 999, transition: 'width .3s' },
+  item: { padding: '6px 0', borderBottom: '1px solid #f0f0f2' },
+  itemTitle: { fontSize: 12.5 },
   wrap: { padding: 16, overflow: 'auto', height: '100%', boxSizing: 'border-box', fontFamily: '-apple-system, "Segoe UI", "Microsoft YaHei", sans-serif', fontSize: 13, color: '#1a1a1a' },
   row: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10 },
   button: { padding: '6px 14px', border: 'none', borderRadius: 8, background: '#b03a2e', color: '#fff', cursor: 'pointer', fontSize: 13 },
