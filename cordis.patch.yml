@@ -1,0 +1,5 @@
+# A股投资研究：技能快照（四大视角方法论 + AKShare 指引 + Agent 配置参考）。
+# 浏览器半边由 dsh.client 声明加载。
+- insert:
+    - id: a-stock-analysis
+      name: 'dsh-a-stock-analysis'
