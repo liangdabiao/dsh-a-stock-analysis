@@ -38,6 +38,13 @@ npm install && npm test && npm run selftest && npm run build
 - `npm test`：7 个单测（快照合规/四大视角/A股特色/AKShare 指引/Agent 配置参考/addendum 密钥警告/许可）
 - `npm run selftest`：快照+provider+systemPrompt+密钥不入包+面板 API，零网络
 
+
+## 安装
+
+```bash
+dsh plugin --profile web add dsh-a-stock-analysis
+```
+
 ## 许可
 
 MIT（liangdabiao）
