@@ -4,6 +4,11 @@ DeepSeek Harness（dsh）插件：**A股投资研究方法论**——四大视�
 
 方法论来自 [easy_investment_Agent_crewai](https://github.com/liangdabiao/easy_investment_Agent_crewai)（MIT，liangdabiao）的 CrewAI 4-Agent 框架（A股市场分析师 / 财务报表专家 / 市场情绪研究员 / 投资策略顾问）。
 
+<img width="1560" height="768" alt="image" src="https://github.com/user-attachments/assets/19902bd8-a2de-44a5-9d3e-0a0ce88aa148" />
+
+<img width="1842" height="966" alt="image" src="https://github.com/user-attachments/assets/7c04158e-b8de-4abb-a1e8-6870a82bfb5e" />
+
+
 ## 装上以后有什么
 
 | 能力 | 说明 |
