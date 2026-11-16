@@ -47,7 +47,7 @@ npm install && npm test && npm run selftest && npm run build
 ## 安装
 
 ```bash
-dsh plugin --profile web add dsh-a-stock-analysis
+dsh plugin --profile web add https://github.com/liangdabiao/dsh-a-stock-analysis
 ```
 
 ## 许可
